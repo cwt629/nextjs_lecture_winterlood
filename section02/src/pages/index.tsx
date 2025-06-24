@@ -1,6 +1,8 @@
 // 아래 문제를 해결하기 위해, next에서 제공하는 CSS Module이라는 기능을 사용하면 됨.
 // CSS Module은 기존 CSS를 모듈처럼 사용하는 기술인데, 특정 css의 클래스네임들을 자동으로 유니크한 이름으로 변환시켜주는 기술.
+import SearchableLayout from "@/components/searchable-layout";
 import style from "./index.module.css";
+import { ReactNode } from "react";
 //import "./index.css"; // 글로벌 CSS 파일은 App 컴포넌트가 아닌 곳에서는 임포트할 수 없다고 오류가 난다. 이렇게 하다보면 다른 페이지와 충돌이 일어날 수 있기 때문.
 export default function Home() {
   /*
@@ -16,3 +18,9 @@ export default function Home() {
     </>
   );
 }
+
+// page라는 매개변수로 현재 페이지 역할을 할 매개변수를 가져와 SearchableLayout으로 감싸진 페이지를 리턴해주는 함수
+// 자바스크립트의 모든 함수는 객체이므로, 이렇게 메소드를 직접 추가할 수도 있다.
+Home.getLayout = (page: ReactNode) => {
+  return <SearchableLayout>{page}</SearchableLayout>;
+};
