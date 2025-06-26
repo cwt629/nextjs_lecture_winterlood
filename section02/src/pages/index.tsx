@@ -4,6 +4,9 @@ import SearchableLayout from "@/components/searchable-layout";
 import style from "./index.module.css";
 import { ReactNode } from "react";
 //import "./index.css"; // 글로벌 CSS 파일은 App 컴포넌트가 아닌 곳에서는 임포트할 수 없다고 오류가 난다. 이렇게 하다보면 다른 페이지와 충돌이 일어날 수 있기 때문.
+import books from "@/mock/books.json";
+import BookItem from "@/components/book-item";
+
 export default function Home() {
   /*
   클래스명은 CSS Module에 의해 유니크하게 적용되는데,
@@ -12,10 +15,20 @@ export default function Home() {
   그래서 파일명, 클래스명, 해당 클래스의 CSS 내용이 모두 동일하면 동일한 해시가 나옴!
   */
   return (
-    <>
-      <h1 className={style.h1}>인덱스</h1>
-      <h2 className={style.h2}>H2</h2>
-    </>
+    <div className={style.container}>
+      <section>
+        <h3>지금 추천하는 도서</h3>
+        {books.map((book) => (
+          <BookItem key={book.id} {...book} />
+        ))}
+      </section>
+      <section>
+        <h3>등록된 모든 도서</h3>
+        {books.map((book) => (
+          <BookItem key={book.id} {...book} />
+        ))}
+      </section>
+    </div>
   );
 }
 
