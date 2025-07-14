@@ -1,5 +1,7 @@
 // import { useRouter } from "next/router";
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import style from "./[id].module.css";
+import fetchOneBook from "@/lib/fetch-one-book";
 
 // /book/{id} 로 들어온다!
 // {id}와 같은 애를 URL Parameter라고 부른다.
@@ -29,15 +31,30 @@ const mockData = {
     "https://shopping-phinf.pstatic.net/main_3888828/38888282618.20230913071643.jpg",
 };
 
-export default function Page() {
+export const getServerSideProps = async (
+  context: GetServerSidePropsContext
+) => {
+  const id = context.params!.id; // [id].tsx는 무조건 url parameter가 하나 있어야 접근할 수 있으니까, 타입 단언을 해도 안전하다
+  const book = await fetchOneBook(Number(id));
+
+  return {
+    props: { book },
+  };
+};
+
+export default function Page({
+  book,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   // const router = useRouter();
   //   console.log(router);
   // const { id } = router.query;
   // console.log(id); // catch all segment로 하면 배열 형태로 주어짐!
   // return <h1>Book {id}</h1>;
 
+  if (!book) return "문제가 발생했습니다. 다시 시도해주세요.";
+
   const { id, title, subTitle, description, author, publisher, coverImgUrl } =
-    mockData;
+    book;
   return (
     <div className={style.container}>
       <div
