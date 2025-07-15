@@ -1,30 +1,47 @@
 import SearchableLayout from "@/components/searchable-layout";
-// import { useRouter } from "next/router"; // next/router가 Page Router, next/navigate는 App Router용!
-import { ReactNode } from "react";
+import { useRouter } from "next/router"; // next/router가 Page Router, next/navigate는 App Router용!
+import { ReactNode, useEffect, useState } from "react";
 import BookItem from "@/components/book-item";
-import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import fetchBooks from "@/lib/fetch-books";
+import { BookData } from "@/types";
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  // 브라우저로부터 받은 요청에 대한 모든 정보가 context에 포함되어 있다!
-  const q = context.query.q;
-  const books = await fetchBooks(q as string);
+// export const getServerSideProps = async (
+//   context: GetServerSidePropsContext
+// ) => {
+// export const getStaticProps = async (
+//   context: GetStaticPropsContext
+// ) => {
+// 브라우저로부터 받은 요청에 대한 모든 정보가 context에 포함되어 있다!
+// const q = context.query.q; // SSR 방식
 
-  return {
-    props: { books },
+/* SSG 방식 - 
+  빌드 타임에 쿼리를 알 수가 없으므로 query가 없다.
+  그래서 그렇게 하려면 페이지 컴포넌트 안에서 직접 패칭을 해줘야 한다.
+  */
+//   const q = context.query.q;
+//   const books = await fetchBooks(q as string);
+
+//   return {
+//     props: { books },
+//   };
+// };
+
+export default function Page() {
+  const [books, setBooks] = useState<BookData[]>([]);
+  const router = useRouter();
+  const q = router.query.q;
+
+  const fetchSearchResult = async () => {
+    const data = await fetchBooks(q as string);
+    setBooks(data);
   };
-};
 
-export default function Page({
-  books,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  // const router = useRouter();
-  // const { q } = router.query;
-  //console.log(router); // query string이 있으면, 읽기 전 / 후 2번 콘솔 출력이 됨
-
-  // return <h1>Search {q}</h1>;
+  useEffect(() => {
+    if (q) {
+      // 검색 결과를 불러오는 로직
+      fetchSearchResult();
+    }
+  }, [q]);
 
   return (
     <div>

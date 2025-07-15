@@ -1,5 +1,5 @@
-// import { useRouter } from "next/router";
-import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
+import { useRouter } from "next/router";
+import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import style from "./[id].module.css";
 import fetchOneBook from "@/lib/fetch-one-book";
 
@@ -19,23 +19,50 @@ url parameter가 없으면 대응이 되지 않음
 이러한 방식을 Optional Catch All Segment라고 한다.
 */
 
-const mockData = {
-  id: 1,
-  title: "한 입 크기로 잘라 먹는 리액트",
-  subTitle: "자바스크립트 기초부터 애플리케이션 배포까지",
-  description:
-    "자바스크립트 기초부터 애플리케이션 배포까지\n처음 시작하기 딱 좋은 리액트 입문서\n\n이 책은 웹 개발에서 가장 많이 사용하는 프레임워크인 리액트 사용 방법을 소개합니다. 인프런, 유데미에서 5000여 명이 수강한 베스트 강좌를 책으로 엮었습니다. 프런트엔드 개발을 희망하는 사람들을 위해 리액트의 기본을 익히고 다양한 앱을 구현하는 데 부족함이 없도록 만들었습니다. \n\n자바스크립트 기초 지식이 부족해 리액트 공부를 망설이는 분, 프런트엔드 개발을 희망하는 취준생으로 리액트가 처음인 분, 퍼블리셔나 백엔드에서 프런트엔드로 직군 전환을 꾀하거나 업무상 리액트가 필요한 분, 뷰, 스벨트 등 다른 프레임워크를 쓰고 있는데, 실용적인 리액트를 배우고 싶은 분, 신입 개발자이지만 자바스크립트나 리액트 기초가 부족한 분에게 유용할 것입니다.",
-  author: "이정환",
-  publisher: "프로그래밍인사이트",
-  coverImgUrl:
-    "https://shopping-phinf.pstatic.net/main_3888828/38888282618.20230913071643.jpg",
+/*
+동적 경로에 SSG를 적용하기 위해서는
+각 id에 해당하는 페이지를 사전 렌더링해야 하기 때문에
+id에 뭐가 들어갈 수 있을지를 미리 구해놓는 과정이 필요하다!
+그래서 여기서 경로 설정하기 과정이 필요하며, 그 역할을 하는 것이 getStaticPaths이다.
+
+n개의 경로에 대해 총 n개의 페이지를 렌더링한다!
+
+빌드한 뒤, .next/server/pages/book 폴더에 가면 1, 2, 3번이 만들어져 있는 걸 확인 가능!
+*/
+export const getStaticPaths = () => {
+  return {
+    paths: [
+      { params: { id: "1" } },
+      { params: { id: "2" } },
+      { params: { id: "3" } },
+    ],
+    /*
+    대체, 대비책, 보험 정도로 해석되는 폴백
+    저기 없는 path로 접속 요청을 하게 되면 실행할 대비책
+
+    false: 404 반환
+
+    'blocking': 즉시 생성(like SSR), next 서버에 저장됨.
+    그 이후 요청에서도 그걸 그대로 사용.
+
+    true: 데이터 없는 폴백 상태의 페이지만 미리 반환 + 즉시 생성
+    props 없는 페이지를 먼저 반환(데이터가 없는 상태의 페이지 렌더링. getStaticProps 계산 전에 빈 Page 먼저!)
+    그 이후 props 계산하고, props만 따로 반환(데이터가 있는 상태의 페이지 렌더링)
+    */
+    fallback: true,
+  };
 };
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
+export const getStaticProps = async (context: GetStaticPropsContext) => {
   const id = context.params!.id; // [id].tsx는 무조건 url parameter가 하나 있어야 접근할 수 있으니까, 타입 단언을 해도 안전하다
   const book = await fetchOneBook(Number(id));
+
+  // 실제로 존재하지 않는 페이지로 갔을 때 not found로 바로 보내고 싶을 경우(리다이렉트)
+  if (!book) {
+    return {
+      notFound: true,
+    };
+  }
 
   return {
     props: { book },
@@ -44,17 +71,18 @@ export const getServerSideProps = async (
 
 export default function Page({
   book,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  // const router = useRouter();
+}: InferGetStaticPropsType<typeof getStaticProps>) {
+  const router = useRouter();
   //   console.log(router);
   // const { id } = router.query;
   // console.log(id); // catch all segment로 하면 배열 형태로 주어짐!
   // return <h1>Book {id}</h1>;
 
-  if (!book) return "문제가 발생했습니다. 다시 시도해주세요.";
+  // fallback 상태(데이터를 기다리는 중)
+  if (router.isFallback) return "로딩 중입니다...";
+  if (!book) return "문제가 발생했습니다. 다시 시도해주세요."; // 로딩이 끝났음에도 데이터가 없음
 
-  const { id, title, subTitle, description, author, publisher, coverImgUrl } =
-    book;
+  const { title, subTitle, description, author, publisher, coverImgUrl } = book;
   return (
     <div className={style.container}>
       <div
