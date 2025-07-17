@@ -4,11 +4,11 @@ import SearchableLayout from "@/components/searchable-layout";
 import style from "./index.module.css";
 import { ReactNode } from "react";
 //import "./index.css"; // 글로벌 CSS 파일은 App 컴포넌트가 아닌 곳에서는 임포트할 수 없다고 오류가 난다. 이렇게 하다보면 다른 페이지와 충돌이 일어날 수 있기 때문.
-// import books from "@/mock/books.json";
 import BookItem from "@/components/book-item";
 import { InferGetStaticPropsType } from "next";
 import fetchBooks from "@/lib/fetch-books";
 import fetchRandomBooks from "@/lib/fetch-random-books";
+import Head from "next/head";
 
 /* 
 각 페이지에 해당하는 index 파일 내에 아래와 같이 
@@ -41,7 +41,7 @@ export const getStaticProps = async () => {
   //   },
   // };
 
-  console.log("인덱스 페이지 SSG로 하면 빌드 타임에 딱 한번!"); // 개발모드로 실행하면 SSR처럼 새로고침마다 호출됨!
+  //console.log("인덱스 페이지 SSG로 하면 빌드 타임에 딱 한번!"); // 개발모드로 실행하면 SSR처럼 새로고침마다 호출됨!
 
   // 직렬 호출
   // const allBooks = await fetchBooks();
@@ -58,6 +58,25 @@ export const getStaticProps = async () => {
       allBooks,
       recoBooks,
     },
+    /*
+    ISR(Incremental Static Regeneration, 증분 정적 재생성)
+    SSG 방식에서 일정 주기마다 페이지를 자동으로 재생성하는 기능
+
+    아래 revalidate의 값은 그 주기(초)!
+    */
+    //revalidate: 3,
+    /*
+    다만 시간과 관계없이 사용자의 행동에 따라 데이터가 업데이트되는 페이지는 활용이 어렵다.
+    그래서 시간마다가 아니라, 요청(revalidate 요청) 받을 때마다 페이지를 다시 생성하는 ISR도 있으며
+    이를 On-Demand ISR이라고 한다.
+
+    SSG 방식으로 index를 만들기에 revalidate 없으면
+    새로고침해도 바뀌지 않지만
+    /api/revalidate에 handler를 구축해놓고
+    localhost:3000/api/revalidate 로 요청을 보내보면
+    index 페이지가 재생성이 되며
+    다시 돌아와 index에서 새로고침해보면, 내용이 바뀐다.
+    */
   };
 };
 
@@ -80,20 +99,32 @@ InferGetStaticPropsType<typeof getStaticProps>) {
   그래서 파일명, 클래스명, 해당 클래스의 CSS 내용이 모두 동일하면 동일한 해시가 나옴!
   */
   return (
-    <div className={style.container}>
-      <section>
-        <h3>지금 추천하는 도서</h3>
-        {recoBooks.map((book) => (
-          <BookItem key={book.id} {...book} />
-        ))}
-      </section>
-      <section>
-        <h3>등록된 모든 도서</h3>
-        {allBooks.map((book) => (
-          <BookItem key={book.id} {...book} />
-        ))}
-      </section>
-    </div>
+    <>
+      {/* 페이지별로 필요한 타이틀이나 메타태그 등 설정 가능 */}
+      <Head>
+        <title>한입북스</title>
+        <meta property="og:image" content="/thumbnail.png" />
+        <meta property="og:title" content="한입북스" />
+        <meta
+          property="og:description"
+          content="한입 북스에 등록된 도서들을 만나보세요"
+        />
+      </Head>
+      <div className={style.container}>
+        <section>
+          <h3>지금 추천하는 도서</h3>
+          {recoBooks.map((book) => (
+            <BookItem key={book.id} {...book} />
+          ))}
+        </section>
+        <section>
+          <h3>등록된 모든 도서</h3>
+          {allBooks.map((book) => (
+            <BookItem key={book.id} {...book} />
+          ))}
+        </section>
+      </div>
+    </>
   );
 }
 

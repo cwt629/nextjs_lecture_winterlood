@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import style from "./[id].module.css";
 import fetchOneBook from "@/lib/fetch-one-book";
+import Head from "next/head";
 
 // /book/{id} 로 들어온다!
 // {id}와 같은 애를 URL Parameter라고 부른다.
@@ -79,24 +80,48 @@ export default function Page({
   // return <h1>Book {id}</h1>;
 
   // fallback 상태(데이터를 기다리는 중)
-  if (router.isFallback) return "로딩 중입니다...";
+  // if (router.isFallback) return "로딩 중입니다..."; // 이렇게 할 경우, 아래 head로 가기 전에 여기서 바로 리턴되므로 head가 없으며 SEO 설정이 안되는 문제가 있다.
+  if (router.isFallback) {
+    return (
+      <>
+        <Head>
+          <title>한입북스</title>
+          <meta property="og:image" content="/thumbnail.png" />
+          <meta property="og:title" content="한입북스" />
+          <meta
+            property="og:description"
+            content="한입 북스에 등록된 도서들을 만나보세요"
+          />
+        </Head>
+        <div>로딩 중입니다...</div>
+      </>
+    );
+  }
   if (!book) return "문제가 발생했습니다. 다시 시도해주세요."; // 로딩이 끝났음에도 데이터가 없음
 
   const { title, subTitle, description, author, publisher, coverImgUrl } = book;
   return (
-    <div className={style.container}>
-      <div
-        className={style.cover_img_container}
-        style={{ backgroundImage: `url('${coverImgUrl}')` }}
-      >
-        <img src={coverImgUrl} />
+    <>
+      <Head>
+        <title>{title}</title>
+        <meta property="og:image" content={coverImgUrl} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+      </Head>
+      <div className={style.container}>
+        <div
+          className={style.cover_img_container}
+          style={{ backgroundImage: `url('${coverImgUrl}')` }}
+        >
+          <img src={coverImgUrl} />
+        </div>
+        <div className={style.title}>{title}</div>
+        <div className={style.subTitle}>{subTitle}</div>
+        <div className={style.author}>
+          {author} | {publisher}
+        </div>
+        <div className={style.description}>{description}</div>
       </div>
-      <div className={style.title}>{title}</div>
-      <div className={style.subTitle}>{subTitle}</div>
-      <div className={style.author}>
-        {author} | {publisher}
-      </div>
-      <div className={style.description}>{description}</div>
-    </div>
+    </>
   );
 }
