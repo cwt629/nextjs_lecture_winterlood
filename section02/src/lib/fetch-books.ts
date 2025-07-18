@@ -1,7 +1,7 @@
 import { BookData } from "@/types";
 
 export default async function fetchBooks(q?: string): Promise<BookData[]> {
-  let url = `http://localhost:12345/book`;
+  let url = `https://onebite-books-server-main-chi-three.vercel.app/book`;
 
   // 매개변수로 검색어가 전달이 되었다면, 검색 결과를 받아오게 한다
   if (q) {
