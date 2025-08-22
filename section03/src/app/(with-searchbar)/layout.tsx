@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import Searchbar from "./searchbar";
 
 /*
 폴더명에 ()로 묶은 것을 Route Group이라고 하며
@@ -8,7 +9,7 @@ import { ReactNode } from "react";
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div>
-      <div>임시 서치바</div>
+      <Searchbar />
       {children}
     </div>
   );
